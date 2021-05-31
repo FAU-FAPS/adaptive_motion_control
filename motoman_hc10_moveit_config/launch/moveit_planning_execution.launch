@@ -1,0 +1,94 @@
+<launch>
+  <!-- The planning and execution components of MoveIt! configured to run -->
+  <!-- using the ROS-Industrial interface. -->
+
+  <!-- load non-standard joint names -->
+  <rosparam command="load" file="$(find motoman_hc10_support)/config/joint_names_hc10.yaml" />
+
+  <!-- the "sim" argument controls whether we connect to a Simulated or Real robot / Middleware -->
+  <!--  - if sim=false, a robot_ip argument is required -->
+  <arg name="sim" default="false" />
+  <arg name="robot_ip" unless="$(arg sim)" />
+
+  <!-- the "use_middleware" argument controls whether we connect to the robot_middleware           -->
+  <!--  - if use_middleware=true, the middleware_ip argument may be set, if the middleware doesn't -->
+  <!--    run on the same machine                                                                  -->
+  <arg name="use_middleware" default="false" />
+  <arg name="middleware_ip" default="127.0.0.1" if="$(arg use_middleware)" />
+
+  <!-- the "rviz" argument controls whether RViz will be started or not  -->
+  <arg name="rviz" default="true" />
+
+  <!-- use_bswap:=false for DX100, DX200, YRC1000 controllers            -->
+  <!-- use_bswap:=true for FS100 controllers                             -->
+  <!-- in this case (HC10 manipulator) we assume a YRC1000 as controller -->
+  <arg name="use_bswap" default="false" unless="$(arg sim)" />
+  <arg name="controller" default="yrc1000" unless="$(arg sim)" />
+
+  <!-- load the robot_description parameter before launching ROS-I nodes -->
+  <include file="$(find motoman_hc10_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true" />
+  </include>
+
+  <!-- run the robot simulator and action interface nodes -->
+  <group if="$(arg sim)">
+    <include file="$(find industrial_robot_simulator)/launch/robot_interface_simulator.launch" />
+  </group>
+
+  <!-- run the "real robot" interface nodes -->
+  <!--   - this typically includes: robot_state, motion_interface, and joint_trajectory_action nodes    -->
+  <group unless="$(arg sim)">
+
+    <!-- connect to the "real robot" by default -->
+    <group unless="$(arg use_middleware)">
+      <include file="$(find motoman_hc10_support)/launch/robot_interface_streaming_hc10.launch" >
+        <arg name="robot_ip" value="$(arg robot_ip)"/>
+        <arg name="controller" value="$(arg controller)" />
+      </include>
+    </group>
+
+    <!-- connect to the robot_middleware instead of the "real robot"                             -->
+    <!-- - the io_relay node must still be connected directly to the real robot!                 -->
+    <!--   it must also be started in its own namespace to avoid overriding the robot_ip_address -->
+    <!--   parameter loaded in the launch files for the ROS-I nodes                              -->
+    <group if="$(arg use_middleware)">
+      <!-- Uncomment the lines above if required (e.g. if the middleware uses non-default port numbers) -->
+      <!-- <param name="motion_streaming_interface/port" value="..."/> -->
+      <!-- <param name="joint_state/port" value="..."/> -->
+
+      <include file="$(find motoman_driver)/launch/motion_streaming_interface.launch">
+        <arg name="robot_ip" value="$(arg middleware_ip)" />
+        <arg name="use_bswap" default="$(arg use_bswap)" />
+      </include>
+
+      <include file="$(find motoman_driver)/launch/robot_state.launch">
+        <arg name="robot_ip" value="$(arg middleware_ip)" />
+        <arg name="use_bswap" default="$(arg use_bswap)" />
+      </include>
+
+      <node name="joint_trajectory_action" pkg="industrial_robot_client" type="joint_trajectory_action" />
+
+      <group ns="io">
+        <include file="$(find motoman_driver)/launch/io_relay.launch">
+          <arg name="robot_ip" value="$(arg robot_ip)" />
+          <arg name="use_bswap" default="$(arg use_bswap)" />
+        </include>
+      </group>
+    </group>
+
+  </group>
+
+  <!-- publish the robot state (tf transforms) -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <include file="$(find motoman_hc10_moveit_config)/launch/move_group.launch">
+    <arg name="publish_monitored_planning_scene" value="true" />
+  </include>
+
+  <include file="$(find motoman_hc10_moveit_config)/launch/moveit_rviz.launch" if="$(arg rviz)">
+    <arg name="rviz_config" value="$(find motoman_hc10_moveit_config)/launch/moveit.rviz" />
+  </include>
+
+  <!--  <include file="$(find motoman_hc10_moveit_config)/launch/default_warehouse_db.launch" />-->
+
+</launch>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>motion_control_msgs</name>
+  <version>0.1.0</version>
+  <description>The motion_control_msgs package</description>
+  <author>Engin Karlidag</author>
+  <maintainer email="engin.karlidag@gmx.de">Engin Karlidag</maintainer>
+  <license>BSD</license>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>message_generation</build_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>moveit_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>trajectory_msgs</depend>
+
+</package>

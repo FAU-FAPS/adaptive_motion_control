@@ -1,0 +1,112 @@
+# CAUTION: This is just an example file and should be adapted for all specific cases with care!
+
+# Robot driver parameters
+robot_driver:
+  # The planning group containing the relevant joints of the controlled robot
+  # NOTE: Right now, it is assumed and required that the planning group is a chain between the
+  #       base frame and the tool frame (as described in velocity_control/*_frame).
+  planning_group: manipulator
+  # Flag to specify whether to publish the raw/filtered velocity commands processed within the
+  # RobotDriver class (for debugging/analysis)
+  publish_vel_cmd: true
+  # The following parameters will be used for velocity control in general, thus they
+  # are relevant for jogging and pose tracking
+  velocity_control:
+    # The base frame of the robot which is used as reference for the velocity commands
+    # by default (typically base_link or base). The orientation of the base frame specified
+    # here must match the orientation of the base frame used by the robot controller.
+    # The position is not relevant as long as it has a fixed transform to the real base frame.
+    base_frame: base_link
+    # The tool frame of the robot may also be used as reference (typically tool0).
+    # This must be equal to the tool frame (flange) used by the robot controller.
+    tool_frame: tool0
+    # The frequency of the control loop, given by the interpolation clock of the
+    # robot controller
+    control_loop_frequency: 250  # Hz (for a interpolation cycle of 4 ms)
+    # The cartesian limits specify the absolute maximum velocities for linear/angular
+    # motion. When multiple linear axes are involved, then the absolute velocity
+    # v_abs = sqrt(v_x^2 + v_y^2 + v_z^2) will be limited. When multiple angular axes
+    # are involved, then the absolute angle of the rotation vector (axis-angle) will be
+    # limited.
+    cartesian_limits:
+      max_linear_velocity: 0.250           # -> 250 mm/s, loaded as m/s
+      max_angular_velocity: !degrees 60.0  # -> 60 deg/s, loaded as rad/s
+    # The joint velocity limit here is applied to all joints and overwrite the nominal values if appropriate.
+    # The nominal values are retrieved from the robot_description (URDF) or rather the joint limits parameters
+    # loaded from the MoveIt config package (see corresponding joint_limits.yaml file). In any case, the maximum
+    # velocity for each joint is limited to the nominal value for safety reasons. The has_velocity_limit flag can
+    # be used to disable the limit specified here.
+    # NOTE: The joint limits will only be applied to joint velocity commands. Cartesian velocity commands are
+    #       not affected by these limits!
+    joint_limits:
+      has_velocity_limit: true
+      max_velocity: !degrees 60.0  # 60 deg/s, stored as rad/s
+      # The stop tolerance should define a minimal absolute distance to a joint position
+      # limit where the robot could be stopped safely before hitting the hard limit.
+      # When a joint reaches this tolerance zone the robot motion will be stopped and any
+      # commands which would cause a motion in the direction of the limit will be ignored.
+      # NOTE: If the driver/API on the robot controller is taking care of the joint limits,
+      #       then this parameter may be set to a very small value or even zero (disabled).
+      stop_tolerance: !degrees 3.0  # loaded as radians
+
+# Motion relay handler parameters
+# [motion interface node (ROS-I)] -> [motion_relay_handler] -> [motion server (robot)]
+motion_relay_handler:
+  # Receive timeout for the incoming connection. Negative values or zero result in blocking.
+  # The receive timeout (callback function) is used to signal the end of a joint trajectory
+  # streaming. Hence, a proper timeout value >= 0.1 seconds should be chosen here.
+  receive_timeout: 0.1
+
+# State relay handler parameters
+# [robot state node (ROS-I)] <- [state_relay_handler] <- [state server (robot)]
+state_relay_handler:
+  # Receive timeout for the incoming connection. Negative values or zero result in blocking.
+  # The receive timeout may be disabled (setting a value <=0) if the timeout callback is not
+  # required.
+  receive_timeout: 1.0
+
+# Jog interface parameters  
+jog_interface:
+  # Receive tiemout for jog commands. The jog control loop will be exited and the robot will
+  # be stopped after a receive timeout. 
+  receive_timeout: 0.25
+  
+# Pose tracking is accomplished with independent PID controllers for the
+# linear x/y/z and angular components of a goal pose (position and orientation).
+pose_tracking:
+  # The TCP (tool-center-point) frame specified here will be used to track the goal pose
+  # NOTE: This is not fully implemented yet. Right now, only the tool frame will work
+  #       (which is defined in the parameter robot_driver/velocity_control/tool_frame)!
+  tcp_frame: tool0
+  # Receive timeout for goal poses. The pose tracking control loop will be exited and the
+  # robot will be stopped after a receive timeout.
+  receive_timeout: 0.5
+  # The control loop may also be exited before an actual receive timeout if the goal is
+  # reached within a given linear/angular tolerance for a given settle time. As long as
+  # new goals are received the settle time will be resetted to keep the loop running even
+  # if the goal is reached and the robot is settled already. Hence, the goal_settle_time
+  # parameter should be at least greater than the expected period of goal pose messages.
+  goal_tolerance_linear: 1e-4           # -> 0.1 mm, loaded as meters
+  goal_tolerance_angular: !degrees 0.1  # 0.1 degrees, loaded as radians
+  goal_settle_time: 0.1                 # -> 100 ms, loaded as seconds
+  # PID controllers
+  pid_linear_x:
+    p: 1.0
+    i: 0.1
+    d: 0.0
+    i_clamp: 0.010  # -> corresponds to 10 mm/s
+  pid_linear_y:
+    p: 1.0
+    i: 0.1
+    d: 0.0
+    i_clamp: 0.010  # -> corresponds to 10 mm/s
+  pid_linear_z:
+    p: 1.0
+    i: 0.1
+    d: 0.0
+    i_clamp: 0.010  # -> corresponds to 10 mm/s
+  pid_angular:
+    p: 1.0
+    i: 0.1
+    d: 0.0
+    i_clamp: !degrees 10.0  # -> corresponds to 10 deg/s, loaded as rad/s

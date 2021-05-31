@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>robot_middleware</name>
+  <version>0.1.0</version>
+  <description>The robot_middleware package</description>
+  <author>Engin Karlidag</author>
+  <author email="andreas@blank.engineer">Andreas Blank</author>
+  <maintainer email="engin.karlidag@gmx.de">Engin Karlidag</maintainer>
+  <license>Apache 2.0</license>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>message_runtime</exec_depend>
+  
+  <depend>control_msgs</depend>
+  <depend>control_toolbox</depend>
+  <depend>geometry_msgs</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_ros_planning</depend>
+  <depend>motion_control_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rosparam_shortcuts</depend>
+  <depend>simple_message</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_eigen</depend>
+
+</package>

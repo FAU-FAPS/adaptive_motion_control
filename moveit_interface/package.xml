@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>moveit_interface</name>
+  <version>0.1.0</version>
+  <description>The moveit_interface package</description>
+  <author>Engin Karlidag</author>
+  <maintainer email="engin.karlidag@gmx.de">Engin Karlidag</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>message_runtime</exec_depend>
+
+  <depend>motion_control_msgs</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>roscpp</depend>
+  <depend>std_srvs</depend>
+
+</package>

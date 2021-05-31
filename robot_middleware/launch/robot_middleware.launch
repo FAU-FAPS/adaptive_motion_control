@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- connection parameters -->
+  <arg name="robot_ip" />
+  <arg name="bswap" doc="Byte swapping flag (selects which version of the middleware to start, see CMakeLists.txt)" />
+  <arg     if="$(arg bswap)" name="suffix" value="_bswap" />
+  <arg unless="$(arg bswap)" name="suffix" value="" />
+  <!-- non-default port numbers (optional) -->
+  <arg name="motion_port" default="" doc="Motion server port on the robot side" />
+  <arg name="state_port" default="" doc="State server port on the robot side" />
+  <arg name="motion_server_port" default="" doc="Motion server port in the middleware (proxy connection)" />
+  <arg name="state_server_port" default="" doc="State server port in the middleware (proxy connection)" />
+  
+  <!-- robot specific parameters -->
+  <arg name="robot_name" default="robot" doc="Robot name used as prefix for the node name (useful when starting multiple instances)" />
+  <arg name="driver_type" default="" doc="Type of driver to use (e.g. motoman/staubli)" />
+  <arg name="planning_context_file" doc="Planning context launch file (e.g. from MoveIt config package)" />
+  <arg name="settings_file" doc="YAML file containing parameters for the various parts of the middleware (see config/settings_example.yaml)" />
+
+
+  <!-- load the planning context (URDF, SRDF, joint_limits, kinematics) before launching the robot_middleware node -->
+  <include file="$(arg planning_context_file)">
+    <arg name="load_robot_description" value="true" />
+  </include>
+
+  <!-- load the settings file -->
+  <rosparam file="$(arg settings_file)" />
+
+
+  <!-- launch the robot_middleware node -->
+  <node pkg="robot_middleware" type="robot_middleware$(arg suffix)" name="$(arg robot_name)_middleware" output="screen">
+    <param name="driver_type" value="$(arg driver_type)" />
+    <param name="robot_ip" value="$(arg robot_ip)" />
+    <param name="motion_port" value="$(arg motion_port)" />
+    <param name="state_port" value="$(arg state_port)" />
+    <param name="motion_server_port" value="$(arg motion_server_port)" />
+    <param name="state_server_port" value="$(arg state_server_port)" />
+  </node>
+
+</launch>

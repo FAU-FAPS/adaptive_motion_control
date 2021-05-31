@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- connection parameters -->
+  <arg name="robot_ip" />
+  <arg name="bswap" value="false" />
+
+  <!-- port numbers are optional, useful if the middleware should use non-default port numbers -->
+  <arg name="motion_port" default="" />
+  <arg name="state_port" default="" />
+  <arg name="motion_server_port" default="" />
+  <arg name="state_server_port" default="" />
+
+  <!-- robot specific parameters -->
+  <arg name="robot_name" default="tx60l" />
+  <arg name="driver_type" default="staubli" />
+  <arg name="planning_context_file" value="$(find staubli_tx60l_moveit_config)/launch/planning_context.launch" />
+  <arg name="settings_file" value="$(find staubli_tx60l_moveit_config)/config/staubli_tx60l_middleware.yaml" />
+
+  <include file="$(find robot_middleware)/launch/robot_middleware.launch" pass_all_args="true" />
+
+</launch>
