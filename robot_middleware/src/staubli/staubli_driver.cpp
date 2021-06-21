@@ -22,6 +22,7 @@
 #include <algorithm>
 
 using namespace industrial::shared_types;
+using namespace industrial::simple_message;
 using namespace moveit::core;
 using namespace staubli::simple_message;
 
@@ -54,7 +55,10 @@ bool StaubliDriver::sendVelocityCommand_internal(const motion_control_msgs::Velo
   for (int i = 0; i < max_num_joints; ++i)
     vel_cmd_msg.data_.vector_[i] = (shared_real)vel_cmd.cmd[i];
 
-  return sendRequest(vel_cmd_msg);
+  SimpleMessage msg;
+  vel_cmd_msg.toTopic(msg);
+
+  return motion_client_manager_->sendMsg(msg);
 }
 
 bool StaubliDriver::sendVelocityConfig_internal(uint8_t type)
